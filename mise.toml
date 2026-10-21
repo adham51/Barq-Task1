@@ -1,0 +1,5 @@
+# Tool versions for this project. Run "mise install" in the repo to get exactly these.
+[tools]
+terraform = "1.17.0"
+# Python 3.12: ansible-core 2.20 doesn't work on newer Python versions
+"pipx:ansible-core" = { version = "2.20.1", uvx_args = "--python 3.12" }

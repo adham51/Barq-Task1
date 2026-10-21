@@ -1,0 +1,12 @@
+db_name: notesdb
+db_user: notesuser
+db_password: "{{ vault_db_password }}"
+db_port: 5432
+
+postgres_image: "postgres:16.4"
+nginx_image: "nginx:1.27.1"
+
+app_port: 5000
+
+backup_dir: /var/backups/postgres
+backup_retention_days: 7

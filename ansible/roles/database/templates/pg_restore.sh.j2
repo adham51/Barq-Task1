@@ -1,0 +1,4 @@
+#!/bin/bash
+set -euo pipefail
+# Usage: pg_restore.sh /var/backups/postgres/FILE.sql.gz
+gunzip -c "$1" | docker exec -i postgres psql -U {{ db_user }} -d {{ db_name }}

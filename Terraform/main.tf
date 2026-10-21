@@ -1,6 +1,6 @@
 # 1 PROVIDER
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = "~> 1.17.0"
 
   required_providers {
     aws = {
@@ -176,7 +176,7 @@ resource "aws_instance" "app" {
   lifecycle {
     ignore_changes = [ami]
   }
-   credit_specification {
+  credit_specification {
     cpu_credits = "standard"
   }
 }
@@ -201,35 +201,7 @@ resource "aws_instance" "db" {
     ignore_changes = [ami]
   }
 
-   credit_specification {
+  credit_specification {
     cpu_credits = "standard"
   }
-}
-
-# ---------- Elastic IPs ----------
-# Created once by hand and tagged, so they survive terraform destroy, will remove for final submission and use 
-# public ips in outputs.tf
-
-data "aws_eip" "app" {
-  tags = {
-    Name = "${var.project_name}-app-eip"
-  }
-}
-
-data "aws_eip" "db" {
-  tags = {
-    Name = "${var.project_name}-db-eip"
-  }
-}
-
-resource "aws_eip_association" "app" {
-  instance_id   = aws_instance.app.id
-  allocation_id = data.aws_eip.app.id
-  depends_on    = [aws_internet_gateway.igw]
-}
-
-resource "aws_eip_association" "db" {
-  instance_id   = aws_instance.db.id
-  allocation_id = data.aws_eip.db.id
-  depends_on    = [aws_internet_gateway.igw]
 }

@@ -1,0 +1,23 @@
+server {
+    listen 80;
+    server_name _;
+
+    # hide the nginx version in responses and error pages
+    server_tokens off;
+
+    # 127.0.0.11 is Docker's DNS, which turns "app" into the app container's IP
+    # Re-check it every 10s, so a recreated app container (new IP) doesn't cause 502 error
+    resolver 127.0.0.11 valid=10s;
+    # the resolver only works when proxy_pass uses a variable
+    set $app_upstream http://app:{{ app_port }};
+
+    location / {
+        proxy_pass $app_upstream;
+
+        # pass the original request details through to the app
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

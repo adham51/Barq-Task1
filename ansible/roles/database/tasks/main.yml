@@ -20,6 +20,7 @@
   community.docker.docker_compose_v2:
     project_src: /opt/postgres
     state: present
+    wait: true
 
 - name: Install backup script
   ansible.builtin.template:

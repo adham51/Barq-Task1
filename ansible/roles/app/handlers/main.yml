@@ -1,0 +1,7 @@
+# Compose doesn't notice changes inside a mounted file, so restart nginx when its config changes
+- name: Restart nginx
+  community.docker.docker_compose_v2:
+    project_src: /opt/app
+    services:
+      - nginx
+    state: restarted

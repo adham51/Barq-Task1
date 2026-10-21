@@ -1,3 +1,49 @@
-#SPDX-License-Identifier: MIT-0
----
-# tasks file for roles/app
+- name: Create project directory
+  ansible.builtin.file:
+    path: /opt/app
+    state: directory
+    mode: "0755"
+
+- name: Copy application source
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../App/"
+    dest: /opt/app/src/
+
+- name: Build app image
+  community.docker.docker_image:
+    name: barq-users-api:1.0.0
+    source: build
+    build:
+      path: /opt/app/src
+
+- name: Copy template app environment file to host
+  ansible.builtin.template:
+    src: app.env.j2
+    dest: /opt/app/app.env
+    mode: "0600"
+  no_log: true
+
+- name: Copy template nginx config to host
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /opt/app/nginx.conf
+    mode: "0644"
+  notify: Restart nginx
+
+- name: Template compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/app/docker-compose.yml
+    mode: "0644"
+
+- name: Wait for PostgreSQL on the database host
+  ansible.builtin.wait_for:
+    host: "{{ db_host }}"
+    port: "{{ db_port }}"
+    timeout: 300
+
+- name: Start app
+  community.docker.docker_compose_v2:
+    project_src: /opt/app
+    state: present
+    wait: true

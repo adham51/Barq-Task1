@@ -3,8 +3,8 @@ db_user: notesuser
 db_password: "{{ vault_db_password }}"
 db_port: 5432
 
-postgres_image: "postgres:16.4"
-nginx_image: "nginx:1.27.1"
+postgres_image: "postgres:16.4-alpine"
+nginx_image: "nginx:1.27.1-alpine"
 
 app_port: 5000
 

@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+TS=$(date +%F_%H-%M-%S)
+docker exec postgres pg_dump --clean --if-exists -U {{ db_user }} {{ db_name }} \
+  | gzip > "{{ backup_dir }}/{{ db_name }}_${TS}.sql.gz"
+find "{{ backup_dir }}" -name '*.sql.gz' -mtime +{{ backup_retention_days }} -delete

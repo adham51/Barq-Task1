@@ -1,0 +1,11 @@
+- name: Set up database host
+  hosts: db
+  roles:
+    - docker
+    - database
+
+- name: Set up application host
+  hosts: app
+  roles:
+    - docker
+    - app

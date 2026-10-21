@@ -1,0 +1,67 @@
+services:
+  app:
+    image: barq-users-api:1.0.0
+    container_name: app
+    restart: unless-stopped 
+    env_file: app.env
+    # no "ports:" on purpose: the app is reachable only inside the Docker network
+    expose:
+      - "{{ app_port }}"
+    user: "10001:10001" # run as the non-root user created in the Dockerfile
+    read_only: true
+    tmpfs:
+      - /tmp
+    
+    security_opt: # added: prevent privilege escalation if the application is compromised
+      - no-new-privileges:true
+
+    deploy: # added: resource limits for best practice to enforce a resource ceiling and keep the host safe
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:{{ app_port }}/health', timeout=2)"]
+      interval: 15s
+      timeout: 3s
+      start_period: 20s
+      retries: 3
+
+    networks:
+      - backend
+
+  nginx:
+    image: {{ nginx_image }}
+    container_name: nginx
+    restart: unless-stopped
+    # the only published port on this host
+    ports:
+      - "80:80"
+
+    # replaces nginx's default site with our proxy config; read-only so the container can't change it
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+    networks:
+      - backend
+
+    deploy: # added: resource limits for best practice to enforce a resource ceiling and keep the host safe
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+
+    depends_on:
+      app: 
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://127.0.0.1:80/health"] 
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  backend:

@@ -30,7 +30,13 @@ variable "ssh_allowed_cidrs" {
 variable "public_key_path" {
   description = "Path to your SSH public key (.pub file)"
   type        = string
-  default     = "D:/HomeLab-Personal-Projects/barq-lab.pub"
+  default     = "~/.ssh/barq-lab.pub"
+}
+
+variable "private_key_path" {
+  description = "Path to your SSH private key, written into the Ansible inventory"
+  type        = string
+  default     = "~/.ssh/barq-lab"
 }
 
 variable "instance_type" {

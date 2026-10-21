@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Barq Users</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #6b7785;
+      --border: #dde3e9;
+      --accent: #2563eb;
+      --danger: #dc2626;
+      --ok: #16a34a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    main { max-width: 760px; margin: 40px auto; padding: 0 16px; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    h1 { margin: 0; font-size: 1.6rem; }
+    .status { font-size: 0.9rem; color: var(--muted); }
+    .status .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--muted); margin-right: 6px; }
+    .status.ok .dot { background: var(--ok); }
+    .status.down .dot { background: var(--danger); }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+    h2 { margin: 0 0 14px; font-size: 1.1rem; }
+    form { display: flex; gap: 10px; flex-wrap: wrap; }
+    input {
+      flex: 1 1 200px; padding: 10px 12px; font-size: 1rem;
+      border: 1px solid var(--border); border-radius: 6px;
+    }
+    button {
+      padding: 10px 16px; font-size: 0.95rem; border: 0; border-radius: 6px;
+      background: var(--accent); color: #fff; cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+    button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+    button.danger { background: transparent; color: var(--danger); padding: 6px 10px; }
+    .message { min-height: 1.2em; margin-top: 10px; font-size: 0.9rem; }
+    .message.error { color: var(--danger); }
+    .message.success { color: var(--ok); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+    th { font-size: 0.8rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.04em; }
+    .list-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .empty { color: var(--muted); text-align: center; padding: 20px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Barq Users</h1>
+      <span id="status" class="status"><span class="dot"></span>checking database…</span>
+    </header>
+
+    <section class="card">
+      <h2>Add a user</h2>
+      <form id="create-form">
+        <input id="username" placeholder="Username" required>
+        <input id="email" type="email" placeholder="Email" required>
+        <button type="submit">Add</button>
+      </form>
+      <div id="message" class="message"></div>
+    </section>
+
+    <section class="card">
+      <div class="list-head">
+        <h2>Users in PostgreSQL</h2>
+        <button class="secondary" id="refresh">Refresh</button>
+      </div>
+      <table>
+        <thead><tr><th>ID</th><th>Username</th><th>Email</th><th></th></tr></thead>
+        <tbody id="users"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const usersBody = document.getElementById('users');
+    const message = document.getElementById('message');
+
+    function showMessage(text, type) {
+      message.textContent = text;
+      message.className = 'message ' + type;
+    }
+
+    async function checkHealth() {
+      const status = document.getElementById('status');
+      try {
+        const res = await fetch('/health');
+        status.className = 'status ' + (res.ok ? 'ok' : 'down');
+        status.lastChild.textContent = res.ok ? 'database connected' : 'database unreachable';
+      } catch {
+        status.className = 'status down';
+        status.lastChild.textContent = 'app unreachable';
+      }
+    }
+
+    async function loadUsers() {
+      usersBody.innerHTML = '';
+      const res = await fetch('/users');
+      if (!res.ok) {
+        usersBody.innerHTML = '<tr><td colspan="4" class="empty">Could not load users</td></tr>';
+        return;
+      }
+      const users = await res.json();
+      if (users.length === 0) {
+        usersBody.innerHTML = '<tr><td colspan="4" class="empty">No users yet</td></tr>';
+        return;
+      }
+      for (const user of users) {
+        // textContent instead of innerHTML, so user input is never run as HTML
+        const row = document.createElement('tr');
+        for (const value of [user.id, user.username, user.email]) {
+          const cell = document.createElement('td');
+          cell.textContent = value;
+          row.appendChild(cell);
+        }
+        const actions = document.createElement('td');
+        const del = document.createElement('button');
+        del.className = 'danger';
+        del.textContent = 'Delete';
+        del.onclick = () => deleteUser(user.id);
+        actions.appendChild(del);
+        row.appendChild(actions);
+        usersBody.appendChild(row);
+      }
+    }
+
+    async function deleteUser(id) {
+      const res = await fetch('/users/' + id, { method: 'DELETE' });
+      showMessage(res.ok ? 'User deleted' : 'Could not delete user', res.ok ? 'success' : 'error');
+      loadUsers();
+    }
+
+    document.getElementById('create-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const res = await fetch('/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: document.getElementById('username').value,
+          email: document.getElementById('email').value,
+        }),
+      });
+      if (res.ok) {
+        showMessage('User created', 'success');
+        event.target.reset();
+      } else {
+        showMessage('Could not create user (username or email may already exist)', 'error');
+      }
+      loadUsers();
+    });
+
+    document.getElementById('refresh').addEventListener('click', loadUsers);
+
+    checkHealth();
+    loadUsers();
+  </script>
+</body>
+</html>

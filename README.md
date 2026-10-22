@@ -75,7 +75,7 @@ This removes all resources, including the backups on the DB volume.
 - Public IPs change when an instance is stopped and started. Rerun `./deploy.sh` to update the inventory.
 - HTTP only, no TLS.
 - Backups stay on the DB host. In production, ship them off-host, e.g. to S3.
-- `notesuser` is created through `POSTGRES_USER`, which makes it a superuser.
+- `notesuser` (no superuser rights) is created by `init-user.sql`, which Postgres runs only on an empty data volume. Changing its name or password later needs a manual `ALTER ROLE`.
 - The app image is built on the app host. Bump its tag when the code changes.
 
 ## Credits

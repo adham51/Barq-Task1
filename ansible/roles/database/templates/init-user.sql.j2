@@ -1,0 +1,4 @@
+-- runs once, when Postgres starts with an empty data volume
+-- creates the app user without superuser rights and gives it the app database
+CREATE ROLE {{ db_user }} LOGIN PASSWORD '{{ db_password }}';
+ALTER DATABASE {{ db_name }} OWNER TO {{ db_user }};

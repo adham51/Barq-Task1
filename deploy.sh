@@ -14,6 +14,8 @@ terraform init
 terraform apply -auto-approve
 
 echo "2- generate ansible inventory from tf outputs"
+# the folder isn't in git (hosts.ini is gitignored), so create it on a fresh clone
+mkdir -p ../ansible/inventory
 terraform output -raw ansible_inventory > ../ansible/inventory/hosts.ini
 
 echo "3- setting up ansible"

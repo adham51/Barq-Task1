@@ -1,6 +1,7 @@
 db_name: notesdb
 db_user: notesuser
 db_password: "{{ vault_db_password }}"
+db_admin_password: "{{ vault_db_admin_password }}"
 db_port: 5432
 
 postgres_image: "postgres:16.4-alpine"

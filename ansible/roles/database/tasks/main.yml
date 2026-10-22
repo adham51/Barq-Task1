@@ -16,6 +16,15 @@
     dest: /opt/postgres/docker-compose.yml
     mode: "0600"
 
+# owned by uid 70 (postgres user in the alpine image) so the container can read it, but other host users can't
+- name: Template app user init script
+  ansible.builtin.template:
+    src: init-user.sql.j2
+    dest: /opt/postgres/init-user.sql
+    owner: "70"
+    group: "70"
+    mode: "0600"
+
 - name: Start PostgreSQL
   community.docker.docker_compose_v2:
     project_src: /opt/postgres

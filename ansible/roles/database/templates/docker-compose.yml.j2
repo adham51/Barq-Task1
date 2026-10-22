@@ -5,12 +5,14 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: {{ db_name }}
-      POSTGRES_USER: {{ db_user }}
-      POSTGRES_PASSWORD: "{{ db_password }}"
+      # admin account; the app uses its own user created by init-user.sql
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "{{ db_admin_password }}"
     ports:
-      - "{{ db_host }}:{{ db_port }}:5432" 
+      - "{{ db_host }}:{{ db_port }}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./init-user.sql:/docker-entrypoint-initdb.d/init-user.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U {{ db_user }} -d {{ db_name }}"]
       interval: 10s

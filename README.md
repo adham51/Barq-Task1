@@ -7,8 +7,8 @@ Terraform provisions two EC2 instances on AWS. Ansible installs Docker and deplo
 `deploy.sh` runs the whole flow.
 
 ## Architecture
+![Barq-Task1 Architecture](architecture.png)
 
-<!-- ![Architecture](docs/architecture.png) -->
 
 - Only Nginx is public. It reaches the app by **service name** over a shared Docker network.
 - The app reaches Postgres via the **DB host's private IP**. Postgres is published only on that IP, and the DB security group accepts 5432 only from the app security group.

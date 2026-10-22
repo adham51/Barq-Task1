@@ -1,0 +1,3 @@
+# Always use Linux line endings: scripts and configs run on Linux, and Windows/WSL git then agree
+* text=auto eol=lf
+*.png binary
